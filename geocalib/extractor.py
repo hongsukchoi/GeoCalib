@@ -1,7 +1,7 @@
 """Simple interface for GeoCalib model."""
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -49,8 +49,8 @@ class GeoCalib(nn.Module):
         return load_image(path)
 
     def _post_process(
-        self, camera: BaseCamera, img_data: dict[str, torch.Tensor], out: dict[str, torch.Tensor]
-    ) -> tuple[BaseCamera, dict[str, torch.Tensor]]:
+        self, camera: BaseCamera, img_data: Dict[str, torch.Tensor], out: Dict[str, torch.Tensor]
+    ) -> Tuple[BaseCamera, Dict[str, torch.Tensor]]:
         """Post-process model output by undoing scaling and cropping."""
         camera = camera.undo_scale_crop(img_data)
 
@@ -112,7 +112,7 @@ class GeoCalib(nn.Module):
         self.model.optimizer.set_camera_model(camera_model)
         self.model.optimizer.shared_intrinsics = shared_intrinsics
 
-        out = self.model(img_data | prior_values)
+        out = self.model({**img_data, **prior_values})
 
         camera, gravity = out["camera"], out["gravity"]
         camera, out = self._post_process(camera, img_data, out)

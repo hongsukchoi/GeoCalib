@@ -44,8 +44,10 @@ def get_trivial_estimation(data: Dict[str, torch.Tensor], camera_model: BaseCame
     init_vfov = focal2fov(focal, h)
 
     params = {"width": batch_w, "height": batch_h, "vfov": init_vfov}
-    params |= {"scales": data["scales"]} if "scales" in data else {}
-    params |= {"k1": data["prior_k1"]} if "prior_k1" in data else {}
+    if "scales" in data:
+        params = {**params, **{"scales": data["scales"]}}
+    if "prior_k1" in data:
+        params = {**params, **{"k1": data["prior_k1"]}}
     camera = camera_model.from_dict(params)
     camera = camera.float().to(ref.device)
 
@@ -611,7 +613,7 @@ class LMOptimizer(nn.Module):
         final_cost, weights = self.calculate_costs(final_errors, data)  # (B, N)
 
         if not self.training:
-            infos |= self.estimate_uncertainty(camera_opt, gravity_opt, final_errors, weights)
+            infos = {**infos, **self.estimate_uncertainty(camera_opt, gravity_opt, final_errors, weights)}
 
         infos["stop_at"] = camera_opt.new_ones(camera_opt.shape[0]) * infos["stop_at"]
         for k, c in final_cost.items():

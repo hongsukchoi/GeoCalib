@@ -86,7 +86,7 @@ class PerspectiveDecoder(nn.Module):
 
     def forward(self, data: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         """Forward pass."""
-        return self.up_head(data) | self.latitude_head(data)
+        return {**self.up_head(data), **self.latitude_head(data)}
 
 
 class GeoCalib(nn.Module):
@@ -110,13 +110,9 @@ class GeoCalib(nn.Module):
         features = {"hl": self.backbone(data)["features"], "ll": self.ll_enc(data)["features"]}
         out = self.perspective_decoder({"features": features})
 
-        out |= {
-            k: data[k]
-            for k in ["image", "scales", "prior_gravity", "prior_focal", "prior_k1"]
-            if k in data
-        }
+        out = {**out, **{k: data[k] for k in ["image", "scales", "prior_gravity", "prior_focal", "prior_k1"] if k in data}}
 
-        out |= self.optimizer(out)
+        out = {**out, **self.optimizer(out)}
 
         return out
 

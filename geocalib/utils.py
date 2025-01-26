@@ -85,7 +85,7 @@ class ImagePreprocessor:
         self.conf = {**self.default_conf, **conf}
         self.conf = SimpleNamespace(**self.conf)
 
-    def __call__(self, img: torch.Tensor, interpolation: Optional[str] = None) -> dict:
+    def __call__(self, img: torch.Tensor, interpolation: Optional[str] = None) -> Dict[str, torch.Tensor]:
         """Resize and preprocess an image, return image and resize scale."""
         h, w = img.shape[-2:]
         size = h, w
@@ -139,7 +139,7 @@ class ImagePreprocessor:
         else:
             raise ValueError(f"{self.conf.resize_backend} not implemented.")
 
-    def load_image(self, image_path: Path) -> dict:
+    def load_image(self, image_path: Path) -> Dict[str, torch.Tensor]:
         """Load an image from a path and preprocess it."""
         return self(load_image(image_path))
 
